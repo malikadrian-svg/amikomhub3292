@@ -135,4 +135,28 @@
         </div>
     </section>
 
+    {{-- Partners Section --}}
+    <section class="max-w-7xl mx-auto px-6 py-20">
+        <div class="text-center mb-12">
+            <span class="inline-block px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider mb-4">Mitra & Sponsor</span>
+            <h2 class="text-3xl font-extrabold mb-3">Partner yang Mendukung AmikomEventHub</h2>
+            <p class="text-slate-500 font-medium max-w-xl mx-auto">Terima kasih kepada seluruh mitra dan sponsor yang telah mendukung platform kami.</p>
+        </div>
+
+        @if($partners->isNotEmpty())
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            @foreach($partners as $partner)
+            <div class="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center gap-3 p-6">
+                <img src="{{ $partner->logo_url }}"
+                     alt="Logo {{ $partner->name }}"
+                     class="w-16 h-16 object-contain rounded-xl bg-slate-50 p-1 border border-slate-100">
+                <p class="text-xs font-bold text-center text-slate-600 group-hover:text-indigo-600 transition">{{ $partner->name }}</p>
+            </div>
+            @endforeach
+        </div>
+        @else
+        <div class="text-center py-10 text-slate-400 font-medium">Belum ada data partner.</div>
+        @endif
+    </section>
+
 @endsection

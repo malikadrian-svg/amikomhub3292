@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Event;
+use App\Models\Partner;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -31,6 +32,9 @@ class HomeController extends Controller
         // 4. Eksekusi query dan kirim data hasilnya ke template Blade
         $events = $query->get();
 
-        return view('welcome', compact('events', 'categories'));
+        // 5. Ambil semua data Partner untuk ditampilkan di homepage
+        $partners = Partner::all();
+
+        return view('welcome', compact('events', 'categories', 'partners'));
     }
 }
