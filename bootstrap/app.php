@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Redirect unauthenticated user ke halaman login admin
-        $middleware->redirectGuestsTo(fn () => route('admin.login'));
+        $middleware->redirectGuestsTo('/admin/login');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
