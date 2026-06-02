@@ -105,7 +105,7 @@
         @endif
 
         {{-- Form Login --}}
-        <form action="{{ route('login') }}" method="POST" id="loginForm">
+        <form action="{{ route('admin.login.post') }}" method="POST" id="loginForm">
             @csrf
 
             {{-- Input Email --}}
