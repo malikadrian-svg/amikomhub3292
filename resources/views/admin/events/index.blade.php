@@ -57,6 +57,7 @@
             <table class="w-full bg-white rounded-xl shadow-sm border border-gray-200 text-left">
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-300">
+                        <th class="p-4 font-semibold text-gray-600">Poster</th>
                         <th class="p-4 font-semibold text-gray-600">Judul Event</th>
                         <th class="p-4 font-semibold text-gray-600">Kategori</th>
                         <th class="p-4 font-semibold text-gray-600">Tanggal</th>
@@ -66,6 +67,12 @@
                 <tbody>
                     @forelse($events as $event)
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="p-4">
+                            <img src="{{ ($event->poster_path && Storage::disk('public')->exists($event->poster_path))
+                                ? asset('storage/' . $event->poster_path)
+                                : 'https://placehold.co/16x20' }}"
+                                 class="w-16 h-20 rounded-xl object-cover shadow-sm">
+                        </td>
                         <td class="p-4 text-indigo-600 font-medium">{{ $event->title }}</td>
                         <td class="p-4">
                             <span class="bg-indigo-50 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full">
@@ -91,7 +98,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="p-8 text-center text-gray-400 font-medium">
+                        <td colspan="5" class="p-8 text-center text-gray-400 font-medium">
                             Tidak ada event di kategori ini.
                         </td>
                     </tr>
