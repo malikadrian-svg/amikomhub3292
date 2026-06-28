@@ -2,49 +2,51 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
-    public function store(Request $request)
+    public function create(Event $event)
     {
-        $data = $request->validate([
+        // Mengambil daftar kategori untuk keperluan menu footer
+        $categories = \App\Models\Category::all();
+        return view('checkout.create', compact('event', 'categories'));
+    }
+
+    public function store(Request $request, Event $event)
+    {
+        // 1. Validasi Input Kredensial Pelanggan
+        $request->validate([
             'customer_name'  => 'required|string|max:255',
             'customer_email' => 'required|email|max:255',
             'customer_phone' => 'required|string|max:20',
-            'event_id'       => 'required|exists:events,id',
         ]);
 
-        // Generate order ID unik
-        $orderId = 'TRX-' . strtoupper(uniqid());
+        // 2. Cegah Check-out Jika Tiket Habis
+        if ($event->stock <= 0) {
+            return back()->with('error', 'Mohon maaf, tiket untuk acara ini sudah habis.');
+        }
 
-        // Ambil event untuk hitung harga
-        $event = \App\Models\Event::findOrFail($data['event_id']);
-        $serviceFee = 5000;
-        $totalPrice  = $event->price + $serviceFee;
+        // 3. Generate Kode TRX (Unik)
+        $orderId    = 'TRX-' . time() . '-' . Str::random(5);
+        $totalPrice = $event->price + 5000; // Menambahkan biaya admin (dummy)
 
-        // Simpan transaksi ke database
+        // 4. Merekam Transaksi ke Database
         $transaction = Transaction::create([
             'event_id'       => $event->id,
             'order_id'       => $orderId,
-            'customer_name'  => $data['customer_name'],
-            'customer_email' => $data['customer_email'],
-            'customer_phone' => $data['customer_phone'],
+            'customer_name'  => $request->customer_name,
+            'customer_email' => $request->customer_email,
+            'customer_phone' => $request->customer_phone,
             'total_price'    => $totalPrice,
-            'status'         => 'Success', // simulasi langsung success
+            'status'         => 'Pending', // Status Awal
         ]);
 
-        // Simpan ke session untuk ditampilkan di halaman tiket
-        session([
-            'ticket_order_id'      => $transaction->order_id,
-            'ticket_customer_name' => $transaction->customer_name,
-            'ticket_event_title'   => $event->title,
-            'ticket_event_date'    => $event->date,
-            'ticket_event_location'=> $event->location,
-            'ticket_total_price'   => $totalPrice,
-        ]);
-
-        return redirect()->route('ticket');
+        // 5. Arahkan ke rute dummy halaman sukses sementara
+        // (Akan kita ubah di Pertemuan selanjutnya menuju Midtrans)
+        return redirect('/');
     }
 }
