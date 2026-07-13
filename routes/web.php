@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\MidtransWebhookController;
 
 
 
@@ -23,6 +24,10 @@ Route::post('/checkout/{event}', [CheckoutController::class, 'store'])->name('ch
 Route::get('/payment/{order_id}', [CheckoutController::class, 'payment'])->name('checkout.payment');
 Route::get('/success/{order_id}', [CheckoutController::class, 'success'])->name('checkout.success');
 Route::get('/my-ticket', [TicketController::class, 'show'])->name('ticket');
+
+// =====================
+// Rute Midtrans Webhook (bebas akses, tanpa middleware)
+Route::post('/midtrans/callback', [MidtransWebhookController::class, 'handle']);
 
 // =====================
 // Rute Admin Area
