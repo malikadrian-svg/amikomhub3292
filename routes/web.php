@@ -44,6 +44,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('events', AdminEventController::class);
         Route::resource('categories', CategoryController::class);
         Route::get('transactions', [TransactionController::class, 'index'])->name('transactions.index');
+        Route::post('transactions/{transaction}/mark-success', [TransactionController::class, 'markSuccess'])->name('transactions.markSuccess');
         Route::resource('partners', PartnerController::class);
     });
 });

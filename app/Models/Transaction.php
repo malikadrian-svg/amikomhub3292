@@ -11,4 +11,30 @@ class Transaction extends Model
  {
  return $this->belongsTo(Event::class);
  }
+
+ public function markAsSuccess()
+ {
+ // Prevent duplicate processing if already processed
+ if (in_array(strtolower($this->status), ['success', 'settlement'])) {
+ return false;
+ }
+
+ $this->status = 'success';
+ $this->save();
+
+ $event = $this->event;
+ if ($event && $event->stock > 0) {
+ $event->stock = $event->stock - 1;
+ $event->save();
+
+ try {
+ \Illuminate\Support\Facades\Mail::to($this->customer_email)
+ ->send(new \App\Mail\EventTicketMail($this));
+ } catch (\Exception $e) {
+ \Illuminate\Support\Facades\Log::error('Gagal mengirim email E-Ticket: ' . $e->getMessage());
+ }
+ }
+
+ return true;
+ }
 }

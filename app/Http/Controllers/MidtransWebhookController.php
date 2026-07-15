@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\EventTicketMail;
 
 class MidtransWebhookController extends Controller
 {
@@ -35,12 +38,12 @@ class MidtransWebhookController extends Controller
             if ($fraudStatus == 'challenge') {
                 $transaction->status = 'challenge';
             } elseif ($fraudStatus == 'accept') {
-                $transaction->status = 'success';
-                $this->processSuccess($transaction);
+                $transaction->markAsSuccess();
+                return response()->json(['message' => 'OK']);
             }
         } elseif ($transactionStatus == 'settlement') {
-            $transaction->status = 'settlement';
-            $this->processSuccess($transaction);
+            $transaction->markAsSuccess();
+            return response()->json(['message' => 'OK']);
         } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
             $transaction->status = 'failed';
         } elseif ($transactionStatus == 'pending') {
@@ -50,10 +53,5 @@ class MidtransWebhookController extends Controller
         $transaction->save();
 
         return response()->json(['message' => 'OK']);
-    }
-
-    private function processSuccess(Transaction $transaction)
-    {
-        // Instruksi lanjutan saat transaksi lunas (pemotongan tiket) akan dibahas pada Modul 13
     }
 }

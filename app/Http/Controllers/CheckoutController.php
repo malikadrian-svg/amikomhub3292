@@ -15,16 +15,15 @@ class CheckoutController extends Controller
         $categories = \App\Models\Category::all();
         return view('checkout.create', compact('event', 'categories'));
     }
+
     public function payment($order_id)
     {
-
         $categories = \App\Models\Category::all();
-        $transaction = Transaction::with('event')->where
-        ('order_id', $order_id)->firstOrFail();
-        return view('checkout.payment',
-        compact('transaction','categories'));
+        $transaction = Transaction::with('event')->where('order_id', $order_id)->firstOrFail();
+        
+        return view('checkout.payment', compact('transaction', 'categories'));
     }
-     // Mengambil daftar kategori untuk keperluan menu footer
+
     public function store(Request $request, Event $event)
     {
         // 1. Validasi Input Kredensial Pelanggan
@@ -78,8 +77,7 @@ class CheckoutController extends Controller
             // Perintah Tembak Generate Snap Token
             $snapToken = \Midtrans\Snap::getSnapToken($params);
 
-            // Update rekaman kita bahwa transaksi terkait sudah memiliki
-            // id token pelunasan
+            // Update rekaman kita bahwa transaksi terkait sudah memiliki id token pelunasan
             $transaction->update(['snap_token' => $snapToken]);
 
             // Redirect ke halaman antarmuka pembayaran final pelanggan
@@ -94,23 +92,34 @@ class CheckoutController extends Controller
     {
         // Mengambil daftar kategori untuk keperluan menu footer
         $categories = \App\Models\Category::all();
+        $transaction = Transaction::with('event')->where('order_id', $order_id)->firstOrFail();
 
-        $transaction = Transaction::where('order_id', $order_id)
-            ->firstOrFail();
-
-        // Validasi status pembayaran asli dari Midtrans (Mencegah manipulasi URL)
-        \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        // Konfigurasi Midtrans untuk mengecek status transaksi langsung ke API
+        \Midtrans\Config::$serverKey   = env('MIDTRANS_SERVER_KEY');
         \Midtrans\Config::$isProduction = false;
+        \Midtrans\Config::$isSanitized  = true;
+        \Midtrans\Config::$is3ds        = true;
 
         try {
-            $midtransStatus = \Midtrans\Transaction::status($order_id);
+            // Mengecek status pesanan secara mandiri (Bypass)
+            $status = \Midtrans\Transaction::status($order_id);
 
-            // Hanya ubah status menjadi sukses jika Midtrans mengonfirmasi pembayaran lunas
-            if (in_array($midtransStatus->transaction_status, ['capture', 'settlement'])) {
-                $transaction->update(['status' => 'success']);
+            if ($status) {
+                // Mengambil nilai status transaksi
+                $trx_status = is_array($status) 
+                    ? ($status['transaction_status'] ?? '') 
+                    : ($status->transaction_status ?? '');
+
+                // Jika API Midtrans mengonfirmasi bahwa transaksi telah berhasil (settlement / capture)
+                if (in_array($trx_status, ['settlement', 'capture'])) {
+                    // Hanya lakukan update jika status di database lokal masih 'pending' (indikasi Webhook tidak masuk)
+                    if (strtolower($transaction->status) === 'pending') {
+                        $transaction->markAsSuccess();
+                    }
+                }
             }
         } catch (\Exception $e) {
-            // Jika error (transaksi tidak ada di Midtrans, koneksi terputus), kembalikan ke beranda
+            // Jika terjadi error dari API Midtrans (transaksi tidak valid), kembalikan ke beranda
             return redirect()->route('home')->with('error', 'Transaksi tidak ditemukan atau gagal diproses oleh sistem pembayaran.');
         }
 
